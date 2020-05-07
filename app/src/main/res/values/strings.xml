@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Image Process</string>
+    <string name="button_name">Upload Image</string>
+    <string name="textView_value">Text of Image</string>
+</resources>
