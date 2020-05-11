@@ -74,6 +74,7 @@ public class Permission extends AppCompatActivity{
     //    int camerapermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         int write_permission = ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int read_permission = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE);
+        int camera_permission = ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
     //    int permissionLocation = ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION);
     //    int permissionRecordAudio = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
 
@@ -88,11 +89,15 @@ public class Permission extends AppCompatActivity{
             listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
 
-        System.out.println("Permission Value "+String.valueOf(listPermissionsNeeded.size())+ String.valueOf(listPermissionsNeeded.isEmpty()));
+        if (camera_permission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.CAMERA);
+        }
+
+        Log.d(TAG,"Permission Value "+String.valueOf(listPermissionsNeeded.size())+ String.valueOf(listPermissionsNeeded.isEmpty()));
 
         if (!listPermissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(activity, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), REQUEST_ID_MULTIPLE_PERMISSIONS);
-            System.out.println("Permission Value "+String.valueOf(listPermissionsNeeded.size())+ String.valueOf(listPermissionsNeeded.isEmpty()));
+            Log.d(TAG,"Permission Value "+String.valueOf(listPermissionsNeeded.size())+ String.valueOf(listPermissionsNeeded.isEmpty()));
             return false;
         }
         return true;
@@ -110,13 +115,15 @@ public class Permission extends AppCompatActivity{
                 // Initialize the map with both permissions
                 perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
                 perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.CAMERA, PackageManager.PERMISSION_GRANTED);
                 // Fill with actual results from user
                 if (grantResults.length > 0) {
                     for (int i = 0; i < permissions.length; i++)
                         perms.put(permissions[i], grantResults[i]);
                     // Check for both permissions
                     if (perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                            && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                            && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "sms & location services permission granted");
                         // process the normal flow
                         Intent j = new Intent(
@@ -133,8 +140,7 @@ public class Permission extends AppCompatActivity{
                         //show the dialog or snackbar saying its necessary and try again otherwise proceed with setup.
                         if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)
                                 || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                                || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+                                || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                             showDialogOK("Service Permissions are required for this app",
                                     new DialogInterface.OnClickListener() {
                                         @Override

@@ -10,21 +10,42 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/button_name"
-            android:textColor="@color/buttoncolur"
-            android:id="@+id/uploadButton"
-            android:layout_centerHorizontal="true"
+            android:orientation="horizontal"
+            android:id="@+id/linear_layout">
 
-            />
+            <Button
+                android:id="@+id/uploadButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_name"
+                android:layout_weight="0.5"
+                android:textColor="@color/buttoncolur"
+
+                />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/camera_button"
+                android:textColor="@color/buttoncolur"
+                android:id="@+id/cameraButton"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="100dp"
+                android:layout_alignRight="@+id/uploadButton"
+
+                />
+        </LinearLayout>
+
+
         <!--style="@style/Widget.AppCompat.Button.Borderless.Colored"-->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/brightness"
-            android:layout_below="@id/uploadButton"
+            android:layout_below="@id/linear_layout"
             android:textAlignment="center"
             android:text="Adjust Brightness"
             />
@@ -59,11 +80,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/imageView"
             android:layout_below="@id/adjust_contrast"
-            android:padding="10px"
-            android:layout_centerHorizontal="true"
+            android:padding="0px"
             android:src="@mipmap/andy_lg"
-
-
             />
 
         <Button

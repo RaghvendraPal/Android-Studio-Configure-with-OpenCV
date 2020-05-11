@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -45,6 +46,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ImageActivity extends AppCompatActivity {
 
@@ -58,6 +61,9 @@ public class ImageActivity extends AppCompatActivity {
     private boolean flag_contrast = false;
     private boolean flag_brightness = false;
     private static int RESULT_LOAD_IMAGE = 1;
+    private static final int RESULT_CAMERA_LOAD_IMAGE = 1888;
+    String currentPhotoPath;
+//    private static final int REQUEST_CAMERA = ;
 
     static {
         System.loadLibrary("opencv_java4");
@@ -76,6 +82,9 @@ public class ImageActivity extends AppCompatActivity {
         Button buttonClick = (Button) findViewById(R.id.uploadButton);
         Button buttonpredictClick = (Button) findViewById(R.id.predict_text);
         Button buttonrotateClick = (Button) findViewById(R.id.rotate_image);
+        Button buttoncamera = (Button) findViewById(R.id.cameraButton);
+        imageView = (ImageView) findViewById(R.id.imageView);
+        final Permission permission = new Permission(ImageActivity.this);
         AppCompatSeekBar appCompatSeekBar = (AppCompatSeekBar) findViewById(R.id.adjust_brightness);
         appCompatSeekBar.setMax(100);
         if(Build.VERSION.SDK_INT >= 21){
@@ -166,6 +175,31 @@ public class ImageActivity extends AppCompatActivity {
 //        catch(IOException e){
 //            System.out.println(e.toString());
 //        }
+        buttoncamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (permission.checkAndRequestPermissions()){
+                    Intent camera_intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                    if (camera_intent.resolveActivity(getPackageManager()) != null) {
+//                        File photoFile = null;
+//                        try {
+//                            photoFile = createImageFile();
+//                        } catch (IOException ex) {
+//                            // Error occurred while creating the File
+//                        }
+//                        // Continue only if the File was successfully created
+//                        if (photoFile != null) {
+//                            Uri photoURI = FileProvider.getUriForFile(this,
+//                                    "com.example.android.fileprovider",
+//                                    photoFile);
+//                            camera_intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(camera_intent, RESULT_CAMERA_LOAD_IMAGE);
+//                        }
+//                    }
+                }
+
+            }
+        });
 
         buttonrotateClick.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -178,7 +212,7 @@ public class ImageActivity extends AppCompatActivity {
         buttonClick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Permission permission = new Permission(ImageActivity.this);
+
 //                WRITE_Permission write_permission = new WRITE_Permission();
 //                boolean value = permission.isStoragePermissionGranted(ImageActivity.this);
 //                boolean w_value = write_permission.isStoragePermissionGranted(ImageActivity.this);
@@ -206,6 +240,33 @@ public class ImageActivity extends AppCompatActivity {
 
     }
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+//        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = new File(Environment.getExternalStorageDirectory() + "/Created");
+        boolean success = true;
+        if (!storageDir.exists()) {
+            success = storageDir.mkdirs();
+        }
+        File image = null;
+        if (success) {
+            image = File.createTempFile(
+                    imageFileName,  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+            currentPhotoPath = image.getAbsolutePath();
+
+        }
+
+        return image;
+
+        // Save a file: path for use with ACTION_VIEW intents
+
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -222,23 +283,10 @@ public class ImageActivity extends AppCompatActivity {
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
             System.out.println("Picture Path : "+picturePath);
-            imageView = (ImageView) findViewById(R.id.imageView);
             bitmap = BitmapFactory.decodeFile(picturePath);
             imageView.setImageBitmap(bitmap);
 
 //            OpenCVTest(picturePath);
-//            Tess_OCR tess_ocr = new Tess_OCR(picturePath, textView, ImageActivity.this);
-
-//            String path = Environment.getExternalStorageDirectory().toString();
-//            System.out.println(path);
-//            Log.d("Files", "Path: " + path);
-//            File directory = new File(path);
-//            File[] files = directory.listFiles();
-//            Log.d("Files", "Size: "+ files.length);
-//            for (int i = 0; i < files.length; i++)
-//            {
-//                Log.d("Files", "FileName:" + files[i].getName());
-//            }
 
             File folder = new File(Environment.getExternalStorageDirectory() + "/Created");
             boolean success = true;
@@ -273,6 +321,18 @@ public class ImageActivity extends AppCompatActivity {
             }
 
 
+        }
+        else if (requestCode == RESULT_CAMERA_LOAD_IMAGE && resultCode == RESULT_OK && data != null) {
+            Bundle extras = data.getExtras();
+            // get the cropped bitmap
+            bitmap = extras.getParcelable("data");
+//            bitmap = (Bitmap) data.get.get("data");
+//            Uri selectedImage = data.getData();
+            imageView.setImageBitmap(bitmap);
+            File dir = new File( Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DCIM), "Camera");
+
+//            OpenCVTest(picturePath);
         }
     }
 

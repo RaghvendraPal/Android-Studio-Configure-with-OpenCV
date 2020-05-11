@@ -4,4 +4,5 @@
     <string name="predict_button">Predict Text</string>
     <string name="rotate_button">Rotate Text</string>
     <string name="textView_value">Text of Image</string>
+    <string name="camera_button">Camera</string>
 </resources>
