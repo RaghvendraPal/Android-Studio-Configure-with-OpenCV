@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Image Process</string>
     <string name="button_name">Upload Image</string>
+    <string name="predict_button">Predict Text</string>
+    <string name="rotate_button">Rotate Text</string>
     <string name="textView_value">Text of Image</string>
 </resources>

@@ -20,10 +20,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatSeekBar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +33,7 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -49,7 +52,11 @@ public class ImageActivity extends AppCompatActivity {
     private static final String TAG = ImageActivity.class.getSimpleName();
     private static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/Tess";
     private TessBaseAPI tessBaseAPI;
-
+    private Bitmap bitmap;
+    private Bitmap resultBitmap = null;
+    private ImageView imageView;
+    private boolean flag_contrast = false;
+    private boolean flag_brightness = false;
     private static int RESULT_LOAD_IMAGE = 1;
 
     static {
@@ -67,6 +74,86 @@ public class ImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image);
         Button buttonClick = (Button) findViewById(R.id.uploadButton);
+        Button buttonpredictClick = (Button) findViewById(R.id.predict_text);
+        Button buttonrotateClick = (Button) findViewById(R.id.rotate_image);
+        AppCompatSeekBar appCompatSeekBar = (AppCompatSeekBar) findViewById(R.id.adjust_brightness);
+        appCompatSeekBar.setMax(100);
+        if(Build.VERSION.SDK_INT >= 21){
+            try {
+                appCompatSeekBar.setMin(-100);
+            }
+            catch(Exception e){
+
+            }
+        }
+
+        appCompatSeekBar.setProgress(0);
+        appCompatSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                try {
+                    resultBitmap = increaseBrightness(progress);
+                    imageView.setImageBitmap(resultBitmap);
+                }
+                catch (Exception e){
+                    Log.d(TAG, String.valueOf(e));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                flag_contrast = true;
+                if (flag_brightness){
+                    flag_brightness = false;
+                    bitmap = resultBitmap;
+                }
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        AppCompatSeekBar appCompatSeekBar_contrast = (AppCompatSeekBar) findViewById(R.id.adjust_contrast);
+        appCompatSeekBar_contrast.setMax(10);
+        if(Build.VERSION.SDK_INT >= 21){
+            try {
+                appCompatSeekBar_contrast.setMin(1);
+            }
+            catch(Exception e){
+
+            }
+        }
+
+        appCompatSeekBar_contrast.setProgress(1);
+        appCompatSeekBar_contrast.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                try {
+                    resultBitmap = increaseContrast(progress);
+                    imageView.setImageBitmap(resultBitmap);
+                }
+                catch (Exception e){
+                    Log.d(TAG, String.valueOf(e));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                flag_brightness = true;
+                if (flag_contrast){
+                    flag_contrast = false;
+                    bitmap = resultBitmap;
+                }
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 //        try {
 //            AssetManager assetManager = getAssets();
 //            System.out.println("Asset Manager: " + assetManager.toString());
@@ -79,6 +166,14 @@ public class ImageActivity extends AppCompatActivity {
 //        catch(IOException e){
 //            System.out.println(e.toString());
 //        }
+
+        buttonrotateClick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                imageView.setRotation(90);
+                imageView.setFitsSystemWindows(true);
+            }
+        });
 
         buttonClick.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +192,18 @@ public class ImageActivity extends AppCompatActivity {
                 }
             }
         });
+
+        buttonpredictClick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                prepareTessData();
+                startOCR();
+
+            }
+        });
+
+
     }
 
     @Override
@@ -115,11 +222,11 @@ public class ImageActivity extends AppCompatActivity {
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
             System.out.println("Picture Path : "+picturePath);
-//            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-//            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
-            prepareTessData();
-            startOCR(picturePath);
-            OpenCVTest(picturePath);
+            imageView = (ImageView) findViewById(R.id.imageView);
+            bitmap = BitmapFactory.decodeFile(picturePath);
+            imageView.setImageBitmap(bitmap);
+
+//            OpenCVTest(picturePath);
 //            Tess_OCR tess_ocr = new Tess_OCR(picturePath, textView, ImageActivity.this);
 
 //            String path = Environment.getExternalStorageDirectory().toString();
@@ -169,7 +276,44 @@ public class ImageActivity extends AppCompatActivity {
         }
     }
 
-//    public static final int STORAGE_PERMISSION_REQUEST_CODE= 1;
+
+    private Bitmap increaseBrightness(int progress_value){
+//        Log.d(TAG, "Progress Value "+ String.valueOf(progress_value));
+        Mat image_b_opencv = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
+//        Log.d(TAG, "MAT : "+String.valueOf(image_b_opencv));
+//        if(resultBitmap == null){
+        Utils.bitmapToMat(bitmap, image_b_opencv);
+//            }
+//        else{
+//            Utils.bitmapToMat(resultBitmap, image_b_opencv);
+//        }
+        image_b_opencv.convertTo(image_b_opencv, -1, 1, progress_value*2);
+        Bitmap result_bitmap = Bitmap.createBitmap(image_b_opencv.cols(), image_b_opencv.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(image_b_opencv, result_bitmap);
+//        Log.d(TAG, "result bitmap : "+String.valueOf(result_bitmap));
+        return result_bitmap;
+    }
+
+    private Bitmap increaseContrast(int progress_value){
+
+        Log.d(TAG, "Contrast Progress Value "+ String.valueOf(progress_value));
+        Mat image_b_opencv = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
+//        Log.d(TAG, "MAT : "+String.valueOf(image_b_opencv));
+//        if(resultBitmap == null){
+        Utils.bitmapToMat(bitmap, image_b_opencv);
+//    }
+//        else{
+//            Utils.bitmapToMat(resultBitmap, image_b_opencv);
+//        }
+        image_b_opencv.convertTo(image_b_opencv, 0, progress_value, 0.1);
+        Bitmap result_bitmap = Bitmap.createBitmap(image_b_opencv.cols(), image_b_opencv.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(image_b_opencv, result_bitmap);
+//        Log.d(TAG, "result bitmap : "+String.valueOf(result_bitmap));
+        return result_bitmap;
+    }
+
+
+    //    public static final int STORAGE_PERMISSION_REQUEST_CODE= 1;
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 //        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -247,16 +391,25 @@ public class ImageActivity extends AppCompatActivity {
         }
     }
 
-    private void startOCR(String mCurrentPhotoPath){
-        System.out.println("Picture Path : "+mCurrentPhotoPath);
+//    private void startOCR(String mCurrentPhotoPath){
+    private void startOCR(){
+//        System.out.println("Picture Path : "+mCurrentPhotoPath);
         try{
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = 6;
-            FileInputStream fis = new FileInputStream(mCurrentPhotoPath);
-//            Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, options);
-            Bitmap bitmap = BitmapFactory.decodeStream(fis);
-            String result = this.getText(bitmap);
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inJustDecodeBounds = false;
+//            options.inSampleSize = 6;
+//            FileInputStream fis = new FileInputStream(mCurrentPhotoPath);
+////            Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, options);
+//            Bitmap bitmap = BitmapFactory.decodeStream(fis);
+//            String result = this.getText(bitmap);
+            Log.d(TAG, String.valueOf(resultBitmap));
+            String result = "";
+            if (resultBitmap != null) {
+                result = this.getText(resultBitmap);
+            }
+            else{
+                result = this.getText(bitmap);
+            }
             System.out.println("Result : "+result);
             TextView textView = (TextView) findViewById(R.id.textView);
             textView.setText(result);

@@ -20,16 +20,71 @@
 
             />
         <!--style="@style/Widget.AppCompat.Button.Borderless.Colored"-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/brightness"
+            android:layout_below="@id/uploadButton"
+            android:textAlignment="center"
+            android:text="Adjust Brightness"
+            />
+
+        <android.support.v7.widget.AppCompatSeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/adjust_brightness"
+            android:layout_below="@id/brightness"
+            android:padding="10px"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/contrast"
+            android:layout_below="@id/adjust_brightness"
+            android:textAlignment="center"
+            android:text="Adjust Contrast"
+            />
+
+        <android.support.v7.widget.AppCompatSeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/adjust_contrast"
+            android:layout_below="@id/contrast"
+            android:padding="10px"
+            />
 
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/imageView"
-            android:layout_below="@id/uploadButton"
+            android:layout_below="@id/adjust_contrast"
             android:padding="10px"
             android:layout_centerHorizontal="true"
             android:src="@mipmap/andy_lg"
 
+
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/predict_button"
+            android:textColor="@color/buttoncolur"
+            android:id="@+id/predict_text"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/imageView"
+
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/rotate_button"
+            android:textColor="@color/buttoncolur"
+            android:id="@+id/rotate_image"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/predict_text"
 
             />
         <!--android:background="@color/imagebackground"-->
@@ -37,7 +92,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/imageView"
+            android:layout_below="@id/rotate_image"
             android:id="@+id/textView"
             android:padding="20dp"
             android:layout_margin="20px"
